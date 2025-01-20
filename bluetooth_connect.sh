@@ -22,9 +22,14 @@ selected=$(echo "$sorted_devices"  | rofi -dmenu -p "Select Bluetooth Device")
 if [ ! -z "$selected" ]; then
   mac=$(echo "$selected" | cut -d ' ' -f 1)
   device=$(echo "$selected" | cut -d ' ' -f 2)
-  notify-send "Connecting to $device"
-  echo "counting $selected"
-  echo "$selected" >> $HISTORY_FILE
-  # tail -n100 "$HISTORY_FILE" > "$HISTORY_FILE"
-  bluetoothctl connect "$mac"
+
+  # Check if device is already on
+  if bluetoothctl info "$mac" | grep -q "Connected: yes"; then
+      notify-send "Disconnecting ${device}"
+      bluetoothctl disconnect "$mac"
+  else
+      notify-send "Connecting ${device}"
+      bluetoothctl connect "$mac"
+      echo "$selected" >> "$HISTORY_FILE"
+  fi
 fi
